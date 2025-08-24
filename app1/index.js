@@ -10,6 +10,7 @@ const students = db.collection("students");
 console.log(students);
 
 */
+/*
 import express from "express";
 import { MongoClient } from "mongodb";
 
@@ -46,54 +47,49 @@ async function main() {
   } catch (err) {
     console.error("Error:", err);
   }
-}
+}*/
 
-main();
-/*
+// index.js
 import express from "express";
 import { MongoClient, ObjectId } from "mongodb";
 
 const app = express();
-const PORT = 3000;
+const port = 3000;
 
-const url = "mongodb://127.0.0.1:27017";
+// Middleware
+app.use(express.json());
+
+// MongoDB connection
+const url = "mongodb://127.0.0.1:27017"; // change if your Mongo URL is different
 const client = new MongoClient(url);
+const dbName = "school"; // your database name
+let db, students;
 
-async function main() {
-  try {
-    await client.connect();
-    console.log(" Connected to MongoDB");
-
-    const db = client.db("school");
-    const students = db.collection("students");
-
-    app.get("/students", async (req, res) => {
-      const all = await students.find().toArray();
-      res.json(all);
-    });
-
-    app.get("/students/:id", async (req, res) => {
-      try {
-        const id = req.params.id;
-        const student = await students.findOne({ _id: new ObjectId(id) });
-
-        if (!student) {
-          return res.status(404).json({ message: "Student not found" });
-        }
-        res.json(student);
-      } catch (err) {
-        res.status(400).json({ message: "Invalid ID format" });
-      }
-    });
-
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error(err);
-  }
+async function connectDB() {
+  await client.connect();
+  console.log("✅ Connected to MongoDB");
+  db = client.db(dbName);
+  students = db.collection("students");
 }
+connectDB();
 
-main();
+// Routes
+app.get("/", (req, res) => {
+  res.send("Hello, Mongo + Express!");
+});
 
-*/
+// Get student by ID
+app.get("/students/:id", async (req, res) => {
+  try {
+    const student = await students.findOne({ _id: new ObjectId(req.params.id) });
+    if (!student) return res.status(404).send("Student not found");
+    res.json(student);
+  } catch (err) {
+    res.status(500).send("❌ Error: " + err.message);
+  }
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`🚀 Server running at http://localhost:${port}`);
+});
